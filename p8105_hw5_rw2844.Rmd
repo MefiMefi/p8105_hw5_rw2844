@@ -7,10 +7,13 @@ output: github_document
 
 ```{r setup, include = FALSE}
 library(tidyverse)
+library(viridis)
+library(plotly)
+library(patchwork)
 knitr::opts_chunk$set(
   fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%"
+  fig.asp = 0.6,
+  out.width = "100%"
 )
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -89,7 +92,84 @@ results_df %>%
 ```
 
 
-
-
 ## Problem 2
 
+Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time
+
+```{r, lda_data}
+lda_df = 
+  tibble(
+    file = list.files("lda_data"),
+  ) %>% 
+  mutate(
+    path = str_c("lda_data/", file),
+    # read in data now
+    data = map(path, read_csv)
+    ) %>% 
+  unnest(data) %>% 
+  # extract the group and id
+  mutate(
+    label = str_extract(file, "(exp_[0-9][0-9]|con_[0-9][0-9])"),
+  ) %>% 
+  separate(
+    label,
+    into = c("arm","id"),
+    sep = "_"
+  ) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "observations",
+    names_prefix = "week_"
+  ) %>% 
+  mutate(
+    arm = as.factor(arm),
+    id = as.numeric(id),
+    week = as.numeric(week),
+    observations = as.numeric(observations)
+  ) %>% 
+  select(-file,-path)
+
+lda_df %>%
+  head(10) %>% 
+  knitr::kable()
+```
+
+
+```{r spaghetti_plot}
+lda_plt1 =
+  lda_df %>%
+  #create unique id for each participants
+  mutate(
+    patient_id = str_c(arm, id, sep = "_")
+  ) %>% 
+  ggplot(
+    aes(x = week,
+        y = observations,
+        color = patient_id
+        )
+  ) +
+  geom_path(aes(group = arm)) +
+  ggtitle("A spaghetti chart of the observations on each subject over time")
+
+
+lda_plt2 =
+  lda_df %>%
+  mutate(
+    patient_id = str_c(arm,id)
+  ) %>% 
+  ggplot(
+    aes(x = week,
+        y = observations,
+        color = arm
+        )
+  ) +
+  geom_smooth(aes(group = arm), se = F) +
+  ggtitle("A regression chart of the observations between control arm and experimental arm")
+
+
+lda_plt1+lda_plt2
+
+```
+
+To make the trend in different arms clearly, I made a separate regression plot between two arms. And from the regression plot, we can see that the observation value in the control arm stay at the same level, in the contrast, the observation value in the experimental arm increases over time.
