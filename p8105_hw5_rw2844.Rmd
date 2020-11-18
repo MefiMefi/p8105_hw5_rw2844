@@ -169,7 +169,9 @@ lda_plt2 =
   ggtitle("A regression chart of the observations between control arm and experimental arm")
 
 
-lda_plt1+lda_plt2
+lda_plt1
+
+lda_plt2
 
 ```
 
@@ -282,5 +284,7 @@ results_df %>%
 
 **Comments:**
 
-As the plot above shows, the sample average of mu_hat across tests for which the null is rejected is not approximate to the true value of mu. Since we rejected the null, our sample mean is far away from the mean under the null hypothesis, and the average of mean of the rejected tests is far away from the null too.
+As the plot above shows, the sample average of mu_hat across tests for which the null is rejected is not approximate to the true value of mu when the mu equals to 1,2 and 3. Since we rejected the null, our sample mean is far away from the mean under the null hypothesis when the sample mean is relatively low, and the average of mean of the rejected tests is far away from the null too.
+
+However, when mu equals to 4,5 and 6, the rejected estimates are approximately equal to the true value of mu since we almost reject all tests.
 
